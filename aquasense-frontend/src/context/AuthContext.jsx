@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import api from '../services/api';
 import { useLanguage } from './LanguageContext';
 import { clearRoleCache } from '../hooks/useRole';
@@ -11,6 +11,24 @@ export function AuthProvider({ children }) {
     const u = localStorage.getItem('aquasense_user');
     return u ? JSON.parse(u) : null;
   });
+
+  // Sincroniza a lingua com o backend no arranque da sessão guardada.
+  // Evita que um localStorage stale (e.g. "pt" de sessão antiga) sobreponha
+  // a lingua real da conta quando o utilizador já tem token válido.
+  useEffect(() => {
+    const token = localStorage.getItem('aquasense_token');
+    const stored = localStorage.getItem('aquasense_user');
+    if (!token || !stored) return;
+    api.get('/api/usuarios/me')
+      .then(res => {
+        const parsed = JSON.parse(stored);
+        const fresh = { ...parsed, nombre: res.data.nombre, language: res.data.language };
+        localStorage.setItem('aquasense_user', JSON.stringify(fresh));
+        setUser(fresh);
+        if (res.data.language) setLang(res.data.language);
+      })
+      .catch(() => {});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const login = async (email, password) => {
     const res = await api.post('/auth/login', { email, password });
