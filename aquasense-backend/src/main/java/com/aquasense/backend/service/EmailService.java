@@ -21,6 +21,9 @@ public class EmailService {
     @Value("${spring.mail.from:noreply@aquasense.io}")
     private String from;
 
+    @Value("${app.frontend.url:https://app.aquasense.io}")
+    private String frontendUrl;
+
     public boolean isEnabled() {
         return mailSender != null;
     }
@@ -43,7 +46,7 @@ public class EmailService {
 
             String timestamp = LocalDateTime.now()
                     .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-            String link = "https://app.aquasense.io/proyectos/" + projetoId;
+            String link = frontendUrl + "/proyectos/" + projetoId;
 
             String body = """
                     <html><body style="font-family:Arial,sans-serif;background:#f5f5f5;padding:20px">

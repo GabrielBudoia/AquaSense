@@ -1,13 +1,13 @@
 package com.aquasense.backend.controller;
 
 import com.aquasense.backend.dto.AlertaDTO;
+import com.aquasense.backend.dto.EquipamentoDTO;
 import com.aquasense.backend.dto.EstadoDTO;
 import com.aquasense.backend.dto.EventoAuditoriaDTO;
 import com.aquasense.backend.dto.LeituraDTO;
 import com.aquasense.backend.dto.PreferenciasNotificacionDTO;
 import com.aquasense.backend.dto.ProjetoDTO;
 import com.aquasense.backend.dto.RolAssignmentDTO;
-import com.aquasense.backend.model.Equipamento;
 import com.aquasense.backend.model.RolProyecto;
 import com.aquasense.backend.service.AlertaService;
 import com.aquasense.backend.service.AuditoriaService;
@@ -124,7 +124,7 @@ public class ProjetoController {
 
     // GET /api/proyectos/:id/equipos
     @GetMapping("/{id}/equipos")
-    public ResponseEntity<List<Equipamento>> getEquipos(@PathVariable Long id, Authentication auth) {
+    public ResponseEntity<List<EquipamentoDTO>> getEquipos(@PathVariable Long id, Authentication auth) {
         return ResponseEntity.ok(projetoService.getEquipos(id, auth.getName()));
     }
 

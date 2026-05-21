@@ -1,5 +1,5 @@
-# Enriquece la foto
-# Recibe los numeros, aplica reglas, añade flags, devuelve JSON final listo
+# OBSOLETO: a avaliação de umbrais foi movida para AlertaService.evaluarUmbral() no backend.
+# Este módulo não é importado por main.py e pode ser removido em futura limpeza.
 
 from config import THRESHOLDS
 

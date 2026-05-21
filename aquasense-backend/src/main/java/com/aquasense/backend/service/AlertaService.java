@@ -262,10 +262,11 @@ public class AlertaService {
     }
 
     private void ejecutarAccionAutomatica(Projeto projeto, String componente, String accion) {
-        log.info("[ACCION AUTO] {}: {}", componente, accion);
+        // Muda o equipamento para MANUAL — a ação descritiva já está gravada em Alerta.accionAutomatica
+        log.info("[ACCION AUTO] {}: {} — equipamento mudado para MANUAL", componente, accion);
         equipamentoRepository.findByProjetoIdAndComponenteId(projeto.getId(), componente)
                 .ifPresent(equip -> {
-                    equip.setEstado(accion);
+                    equip.setEstado("MANUAL");
                     equipamentoRepository.save(equip);
                 });
     }

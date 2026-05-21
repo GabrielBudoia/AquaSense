@@ -72,6 +72,12 @@ public class TuberiaService {
     // Usado por el endpoint interno — sin verificación de ownership
     // -------------------------------------------------------------------------
 
+    public List<TuberiaDTO> listByProjetoInterno(Long projetoId) {
+        return tuberiaRepository.findByProjetoId(projetoId).stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
     @Transactional
     public LecturaTuberiaDTO saveLeitura(Long tuberiaId, LecturaTuberiaDTO dto) {
         Tuberia tuberia = tuberiaRepository.findById(tuberiaId)

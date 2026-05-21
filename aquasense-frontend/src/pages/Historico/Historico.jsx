@@ -66,14 +66,21 @@ export default function Historico() {
     api.get(`/api/proyectos/${id}/historico`).then(r => setHist(r.data)).finally(() => setLoading(false));
   }, [id]);
 
-  const labels = [...new Set(hist?.map(h => h.timestamp) ?? [])]
-    .map(ts => {
-      const d = new Date(ts);
-      return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-    });
+  // Eixo X partilhado por todos os datasets, ordenado cronologicamente
+  const allTimestamps = [...new Set(hist?.map(h => h.timestamp) ?? [])].sort();
 
-  const get = (comp, key) =>
-    hist?.filter(h => h.componente === comp).map(h => h.valores?.[key] ?? null) ?? [];
+  const labels = allTimestamps.map(ts => {
+    const d = new Date(ts);
+    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  });
+
+  // Alinha os valores de cada componente ao eixo temporal global (null para timestamps sem leitura)
+  const get = (comp, key) => {
+    const byTs = new Map(
+      (hist?.filter(h => h.componente === comp) ?? []).map(h => [h.timestamp, h.valores?.[key] ?? null])
+    );
+    return allTimestamps.map(ts => byTs.get(ts) ?? null);
+  };
 
   const charts = [
     {

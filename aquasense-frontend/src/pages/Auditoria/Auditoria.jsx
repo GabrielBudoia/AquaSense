@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { useLanguage } from '../../context/LanguageContext';
@@ -39,6 +39,9 @@ export default function Auditoria() {
       .catch(() => setRows([]))
       .finally(() => setLoading(false));
   }, [id]);
+
+  // Carrega a primeira página ao montar o componente
+  useEffect(() => { load(0, filters); }, [load]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSearch = () => {
     setApplied(filters);

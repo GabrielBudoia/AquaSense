@@ -1,6 +1,8 @@
 package com.aquasense.backend.service;
 
 import com.aquasense.backend.config.JwtConfig;
+import com.aquasense.backend.model.TokenRevogado;
+import com.aquasense.backend.repository.TokenRevogadoRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -10,9 +12,12 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
@@ -20,9 +25,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public class JwtService {
 
     private final JwtConfig jwtConfig;
+    private final TokenRevogadoRepository tokenRevogadoRepository;
 
-    // Lista negra en memoria para tokens invalidados (logout)
-    private final Set<String> tokenBlacklist = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    // Mantido para retrocompatibilidade: tokens emitidos antes desta versão (sem JTI)
+    // ficam aqui até expirarem naturalmente (máx 8h). Não persiste entre restarts.
+    private final Set<String> legacyBlacklist = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     private SecretKey getSigningKey() {
         byte[] keyBytes = jwtConfig.getSecret().getBytes(StandardCharsets.UTF_8);
@@ -35,6 +42,7 @@ public class JwtService {
 
         return Jwts.builder()
                 .subject(userDetails.getUsername())
+                .id(UUID.randomUUID().toString())
                 .claim("globalRole", "USER")
                 .issuedAt(now)
                 .expiration(expiry)
@@ -47,15 +55,37 @@ public class JwtService {
     }
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
-        if (tokenBlacklist.contains(token)) {
+        if (legacyBlacklist.contains(token)) {
             return false;
         }
-        String username = extractUsername(token);
-        return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+        Claims claims = getClaims(token);
+        String jti = claims.getId();
+        if (jti != null && tokenRevogadoRepository.existsByJti(jti)) {
+            return false;
+        }
+        String username = claims.getSubject();
+        return username.equals(userDetails.getUsername()) && !claims.getExpiration().before(new Date());
     }
 
     public void invalidateToken(String token) {
-        tokenBlacklist.add(token);
+        try {
+            Claims claims = getClaims(token);
+            String jti = claims.getId();
+            if (jti != null) {
+                LocalDateTime expiraEm = claims.getExpiration().toInstant()
+                        .atZone(ZoneId.systemDefault()).toLocalDateTime();
+                tokenRevogadoRepository.save(TokenRevogado.builder()
+                        .jti(jti)
+                        .invalidadoEm(LocalDateTime.now())
+                        .expiraEm(expiraEm)
+                        .build());
+                // Limpa registos de tokens já expirados para não crescer indefinidamente
+                tokenRevogadoRepository.deleteExpired(LocalDateTime.now());
+                return;
+            }
+        } catch (Exception ignored) {}
+        // Token sem JTI (emitido antes desta versão): blacklist em memória
+        legacyBlacklist.add(token);
     }
 
     private boolean isTokenExpired(String token) {

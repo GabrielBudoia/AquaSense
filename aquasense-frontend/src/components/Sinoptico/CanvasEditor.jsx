@@ -492,12 +492,23 @@ export default function CanvasEditor({
         api.post(`/api/proyectos/${projectId}/tuberias`, {
           fromComponenteId: fromInst.componenteId,
           toComponenteId: inst.componenteId,
+        }).then(res => {
+          const tuberiaId = res.data?.id;
+          if (tuberiaId) {
+            setConnections(prev =>
+              prev.map(c => c.id === newConn.id ? { ...c, tuberiaId } : c)
+            );
+          }
         }).catch(() => {});
       }
     }
   }
 
   function handleDeleteConnection(connId) {
+    const conn = connections.find(c => c.id === connId);
+    if (conn?.tuberiaId) {
+      api.delete(`/api/proyectos/${projectId}/tuberias/${conn.tuberiaId}`).catch(() => {});
+    }
     setConnections(prev => prev.filter(c => c.id !== connId));
   }
 

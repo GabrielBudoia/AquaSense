@@ -37,22 +37,22 @@ export default function App() {
             } />
             <Route path="/proyectos/:id/equipa" element={
               <ProtectedRoute>
-                <Suspense fallback={null}><Equipa /></Suspense>
+                <Suspense fallback={<p style={{ padding: '2rem', textAlign: 'center' }}>···</p>}><Equipa /></Suspense>
               </ProtectedRoute>
             } />
             <Route path="/proyectos/:id/auditoria" element={
               <ProtectedRoute>
-                <Suspense fallback={null}><Auditoria /></Suspense>
+                <Suspense fallback={<p style={{ padding: '2rem', textAlign: 'center' }}>···</p>}><Auditoria /></Suspense>
               </ProtectedRoute>
             } />
             <Route path="/proyectos/:id/notificaciones" element={
               <ProtectedRoute>
-                <Suspense fallback={null}><Notificaciones /></Suspense>
+                <Suspense fallback={<p style={{ padding: '2rem', textAlign: 'center' }}>···</p>}><Notificaciones /></Suspense>
               </ProtectedRoute>
             } />
             <Route path="/perfil" element={
               <ProtectedRoute>
-                <Suspense fallback={null}><Perfil /></Suspense>
+                <Suspense fallback={<p style={{ padding: '2rem', textAlign: 'center' }}>···</p>}><Perfil /></Suspense>
               </ProtectedRoute>
             } />
             <Route path="*" element={<Navigate to="/login" replace />} />

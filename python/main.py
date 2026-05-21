@@ -4,7 +4,6 @@ import requests
 
 from config import INTERVALO_CICLO, URL_BACKEND
 from simulator import inicializar_estado, actualizar_estado
-from automation import validacion
 from client import enviar_para_projeto
 from tuberias import simular_ciclo_tuberias
 
@@ -115,10 +114,9 @@ def main():
                 print(f"[main] Projeto {project_id} — componentes em MANUAL (sem envio AUTO): {manuais}")
 
             estados[project_id] = actualizar_estado(estados[project_id])
-            estado_validado = validacion(estados[project_id])
 
             # Envía lecturas, pasando la lista de componentes a ignorar (MANUAL)
-            enviar_para_projeto(estado_validado, project_id, modos_manual=manuais)
+            enviar_para_projeto(estados[project_id], project_id, modos_manual=manuais)
 
             # Simula y envía lecturas hidráulicas de tuberías (fallo silencioso)
             simular_ciclo_tuberias(project_id, estados[project_id], cache_tuberias)

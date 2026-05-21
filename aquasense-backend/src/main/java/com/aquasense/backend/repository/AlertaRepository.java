@@ -21,6 +21,8 @@ public interface AlertaRepository extends JpaRepository<Alerta, Long> {
 
     void deleteByProjetoId(Long projetoId);
 
+    long countByProjetoIdAndAtivaTrue(Long projetoId);
+
     // Ciclo de vida: buscar una alerta específica perteneciente a un proyecto
     Optional<Alerta> findByProjetoIdAndId(Long projetoId, Long alertaId);
 }

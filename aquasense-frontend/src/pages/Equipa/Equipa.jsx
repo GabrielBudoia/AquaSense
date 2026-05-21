@@ -47,17 +47,23 @@ export default function Equipa() {
   };
 
   const handleChangeRol = async (member, newRol) => {
+    setError(null);
     try {
       await api.post(`/api/proyectos/${id}/roles`, { email: member.email, rol: newRol });
       load();
-    } catch {}
+    } catch (e) {
+      setError(e?.response?.data?.message ?? t('error_add_member_default'));
+    }
   };
 
   const handleRemove = async (usuarioId) => {
+    setError(null);
     try {
       await api.delete(`/api/proyectos/${id}/roles/${usuarioId}`);
       load();
-    } catch {}
+    } catch (e) {
+      setError(e?.response?.data?.message ?? t('error_add_member_default'));
+    }
   };
 
   if (roleLoading || loading) return null;

@@ -1,5 +1,6 @@
 package com.aquasense.backend.service;
 
+import com.aquasense.backend.dto.EquipamentoDTO;
 import com.aquasense.backend.dto.EstadoDTO;
 import com.aquasense.backend.dto.LeituraDTO;
 import com.aquasense.backend.dto.ProjetoDTO;
@@ -284,9 +285,17 @@ public class ProjetoService {
         return Map.of("status", "ok", "componenteId", componenteId, "modo", modo);
     }
 
-    public List<Equipamento> getEquipos(Long id, String email) {
+    public List<EquipamentoDTO> getEquipos(Long id, String email) {
         findOwnedProject(id, email);
-        return equipamentoRepository.findByProjetoId(id);
+        return equipamentoRepository.findByProjetoId(id).stream()
+                .map(e -> EquipamentoDTO.builder()
+                        .id(e.getId())
+                        .componenteId(e.getComponenteId())
+                        .estado(e.getEstado())
+                        .configuracion(e.getConfiguracion())
+                        .ultimaActualizacion(e.getUltimaActualizacion())
+                        .build())
+                .collect(Collectors.toList());
     }
 
     @Cacheable(value = "layout", key = "#id")
@@ -515,8 +524,7 @@ public class ProjetoService {
         }
 
         // Recuento de alertas activas
-        long alertasAtivas = alertaRepository
-                .findByProjetoIdAndAtivaOrderByCreadaEnDesc(p.getId(), true).size();
+        long alertasAtivas = alertaRepository.countByProjetoIdAndAtivaTrue(p.getId());
 
         // Resumen de sensores — última lectura de desinfeccion y reservorio
         ProjetoDTO.ResumenSensores resumen = buildResumen(p.getId());
