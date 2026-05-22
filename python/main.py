@@ -8,8 +8,9 @@ from client import enviar_para_projeto
 from tuberias import simular_ciclo_tuberias
 
 BACKEND_URL = os.getenv("BACKEND_URL", URL_BACKEND)
-INTERVALO_POLL = 10  # segundos entre verificaciones de proyectos activos
-INTERVALO_MODOS = 5  # segundos entre refresco de los modos AUTO/MANUAL
+INTERVALO_POLL = 10       # segundos entre verificaciones de proyectos activos
+INTERVALO_MODOS = 5       # segundos entre refresco de los modos AUTO/MANUAL
+CACHE_COMPONENTES_TTL = 30  # segundos de caché para los componenteIds del layout
 
 
 def _get_headers():
@@ -33,6 +34,33 @@ def get_active_projects():
         return []
     except Exception:
         return []
+
+
+_cache_componentes: dict = {}  # { project_id: { "ids": [...], "ts": float } }
+
+
+def get_layout_componentes(project_id):
+    """
+    Devuelve los componenteIds del layout activo del proyecto.
+    Caché de CACHE_COMPONENTES_TTL segundos — si el usuario añade un componente,
+    el simulador lo detecta en el siguiente ciclo de refresco.
+    """
+    cached = _cache_componentes.get(project_id)
+    if cached and (time.time() - cached["ts"]) < CACHE_COMPONENTES_TTL:
+        return cached["ids"]
+    try:
+        res = requests.get(
+            f"{BACKEND_URL}/interno/proyectos/{project_id}/componentes",
+            headers=_get_headers(),
+            timeout=4,
+        )
+        if res.status_code == 200:
+            ids = res.json()
+            _cache_componentes[project_id] = {"ids": ids, "ts": time.time()}
+            return ids
+        return cached["ids"] if cached else []
+    except Exception:
+        return cached["ids"] if cached else []
 
 
 def get_modos_componentes(project_id):
@@ -69,6 +97,8 @@ def main():
     # Modos por proyecto: { project_id: { componente_id: "AUTO"|"MANUAL" } }
     modos_por_projeto = {}
     last_modos_refresh = {}
+    # Timestamp del último refresco de componentes del layout por proyecto
+    last_componentes_refresh = {}
 
     print(f"[main] Motor de simulação iniciado. Backend: {BACKEND_URL}")
 
@@ -115,8 +145,12 @@ def main():
 
             estados[project_id] = actualizar_estado(estados[project_id])
 
-            # Envía lecturas, pasando la lista de componentes a ignorar (MANUAL)
-            enviar_para_projeto(estados[project_id], project_id, modos_manual=manuais)
+            # Obtener los componenteIds del layout activo (con caché de 30s)
+            layout_ids = get_layout_componentes(project_id)
+
+            # Envía lecturas filtrando por layout y saltando MANUAL
+            enviar_para_projeto(estados[project_id], project_id,
+                                modos_manual=manuais, layout_ids=layout_ids)
 
             # Simula y envía lecturas hidráulicas de tuberías (fallo silencioso)
             simular_ciclo_tuberias(project_id, estados[project_id], cache_tuberias)

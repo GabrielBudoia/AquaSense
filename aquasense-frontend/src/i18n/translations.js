@@ -342,6 +342,12 @@ export const translations = {
     props_title: 'PROPERTIES',
     props_delete: 'Delete component',
 
+    // Sinóptico vacío y limpieza de layout
+    synoptic_empty_title: 'NO SYNOPTIC CONFIGURED',
+    synoptic_empty_hint: 'Use the layout editor to add equipment and connections.',
+    clear_layout_btn: '⌫ CLEAR SYNOPTIC',
+    clear_layout_confirm: 'This will remove all components and connections from the synoptic. Are you sure?',
+
     // Roles de proyecto
     role_ADMIN: 'Admin',
     role_OPERADOR: 'Operator',
@@ -696,6 +702,12 @@ export const translations = {
     props_title: 'PROPRIEDADES',
     props_delete: 'Eliminar componente',
 
+    // Sinóptico vacío y limpieza de layout
+    synoptic_empty_title: 'SINÓPTICO NÃO CONFIGURADO',
+    synoptic_empty_hint: 'Usa o editor de layout para adicionar equipamentos e ligações.',
+    clear_layout_btn: '⌫ LIMPAR SINÓPTICO',
+    clear_layout_confirm: 'Isto vai remover todos os componentes e ligações do sinóptico. Tens a certeza?',
+
     my_account: 'MINHA CONTA',
     profile_heading: 'PERFIL',
     change_name_label: 'NOME DE EXIBIÇÃO',
@@ -1043,6 +1055,12 @@ export const translations = {
     props_title: 'PROPIEDADES',
     props_delete: 'Eliminar componente',
 
+    // Sinóptico vacío y limpieza de layout
+    synoptic_empty_title: 'SINÓPTICO NO CONFIGURADO',
+    synoptic_empty_hint: 'Usa el editor de diseño para añadir equipos y conexiones.',
+    clear_layout_btn: '⌫ LIMPIAR SINÓPTICO',
+    clear_layout_confirm: '¿Seguro? Esto eliminará todos los componentes y conexiones del sinóptico.',
+
     my_account: 'MI CUENTA',
     profile_heading: 'PERFIL',
     change_name_label: 'NOMBRE VISIBLE',
@@ -1389,6 +1407,12 @@ export const translations = {
     props_title: 'PROPRIÉTÉS',
     props_delete: 'Supprimer le composant',
 
+    // Sinóptico vacío y limpieza de layout
+    synoptic_empty_title: 'SYNOPTIQUE NON CONFIGURÉ',
+    synoptic_empty_hint: "Utilisez l'éditeur de mise en page pour ajouter des équipements et des connexions.",
+    clear_layout_btn: '⌫ EFFACER SYNOPTIQUE',
+    clear_layout_confirm: 'Cela supprimera tous les composants et connexions du synoptique. Confirmer ?',
+
     my_account: 'MON COMPTE',
     profile_heading: 'PROFIL',
     change_name_label: 'NOM D\'AFFICHAGE',
@@ -1734,6 +1758,12 @@ export const translations = {
     print_hint: 'Klicken und ziehen zum Auswählen des Druckbereichs · ESC zum Abbrechen',
     props_title: 'EIGENSCHAFTEN',
     props_delete: 'Komponente löschen',
+
+    // Sinóptico vacío y limpieza de layout
+    synoptic_empty_title: 'KEIN SYNOPTIK KONFIGURIERT',
+    synoptic_empty_hint: 'Verwenden Sie den Layout-Editor, um Geräte und Verbindungen hinzuzufügen.',
+    clear_layout_btn: '⌫ SYNOPTIK LEEREN',
+    clear_layout_confirm: 'Alle Komponenten und Verbindungen werden entfernt. Fortfahren?',
 
     my_account: 'MEIN KONTO',
     profile_heading: 'PROFIL',

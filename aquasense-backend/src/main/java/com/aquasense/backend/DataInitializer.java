@@ -31,9 +31,8 @@ public class DataInitializer implements CommandLineRunner {
             "bomba_distribucion"
     );
 
-    // Layout inicial: 8 componentes alineados de izquierda a derecha,
-    // separados 150px, centrados verticalmente en y=200.
-    private static final String LAYOUT_INICIAL = buildLayout();
+    // El proyecto demo arranca sin layout — el usuario lo construye desde cero
+    private static final String LAYOUT_VAZIO = "{\"componentes\":[],\"tuberias\":[]}";
 
     private final UsuarioRepository usuarioRepository;
     private final ProjetoRepository projetoRepository;
@@ -63,7 +62,7 @@ public class DataInitializer implements CommandLineRunner {
                 .ubicacion("Lisboa, Portugal")
                 .usuario(operador)
                 .simulacaoAtiva(true)
-                .layout(LAYOUT_INICIAL)
+                .layout(LAYOUT_VAZIO)
                 .build());
 
         // 3. Crear los 8 equipos con componenteIds canónicos
@@ -76,58 +75,5 @@ public class DataInitializer implements CommandLineRunner {
         }
 
         log.info("=== Seed aplicado: admin@aquasense.com | proyectoId={} ===", demo.getId());
-    }
-
-    /**
-     * Genera el JSON de layout en el formato canónico {componentes, tuberias}.
-     * Posiciones horizontales calculadas para acomodar los bounding boxes reales de cada
-     * shape ISA (ver equipShapes.jsx). Los 7 enlaces del flujo principal se incluyen
-     * con el pipeType correcto según conexiones-equipos.md.
-     */
-    private static String buildLayout() {
-        // id, componenteId, label, x, y
-        String[][] comps = {
-            {"inst_bc",  "bomba_captacao",    "B. Captação",  "60",  "100"},
-            {"inst_rt",  "reja_tamiz",        "Reja/Tamiz",              "220", "90" },
-            {"inst_cg",  "coagulacion",       "Coagulação",   "370", "90" },
-            {"inst_dc",  "decantador",        "Decantador",              "545", "90" },
-            {"inst_fi",  "filtracion",        "Filtração",    "730", "80" },
-            {"inst_ds",  "desinfeccion",      "Desinfeção",   "900", "96" },
-            {"inst_rv",  "reservorio",        "Reservório",         "1085","80" },
-            {"inst_bd",  "bomba_distribucion","B. Distribuição","1265","100"},
-        };
-
-        // fromInstId, toInstId, fromPort, toPort, pipeType
-        String[][] tubes = {
-            {"inst_bc","inst_rt","descarga",   "alimentacao","aguaCruda"   },
-            {"inst_rt","inst_cg","salida",     "entrada",    "aguaCruda"   },
-            {"inst_cg","inst_dc","salida",     "entrada",    "aguaCruda"   },
-            {"inst_dc","inst_fi","salida",     "entrada",    "aguaTratada" },
-            {"inst_fi","inst_ds","salida",     "entrada",    "aguaTratada" },
-            {"inst_ds","inst_rv","salida",     "entrada",    "aguaTratada" },
-            {"inst_rv","inst_bd","salida",     "succion",    "aguaTratada" },
-        };
-
-        StringBuilder sb = new StringBuilder("{\"componentes\":[");
-        for (int i = 0; i < comps.length; i++) {
-            if (i > 0) sb.append(",");
-            sb.append("{\"id\":\"").append(comps[i][0]).append("\"")
-              .append(",\"componenteId\":\"").append(comps[i][1]).append("\"")
-              .append(",\"label\":\"").append(comps[i][2]).append("\"")
-              .append(",\"x\":").append(comps[i][3])
-              .append(",\"y\":").append(comps[i][4]).append("}");
-        }
-        sb.append("],\"tuberias\":[");
-        for (int i = 0; i < tubes.length; i++) {
-            if (i > 0) sb.append(",");
-            sb.append("{\"id\":\"tub_").append(i).append("\"")
-              .append(",\"fromInstanceId\":\"").append(tubes[i][0]).append("\"")
-              .append(",\"toInstanceId\":\"").append(tubes[i][1]).append("\"")
-              .append(",\"fromPort\":\"").append(tubes[i][2]).append("\"")
-              .append(",\"toPort\":\"").append(tubes[i][3]).append("\"")
-              .append(",\"pipeType\":\"").append(tubes[i][4]).append("\"}");
-        }
-        sb.append("]}");
-        return sb.toString();
     }
 }

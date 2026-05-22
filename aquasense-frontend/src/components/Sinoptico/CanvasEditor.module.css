@@ -163,6 +163,78 @@
   cursor: pointer;
 }
 
+.btnClear {
+  background: transparent;
+  border: 1px solid #ff3d5a;
+  color: #ff3d5a;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 1px;
+  padding: 6px 12px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btnClear:hover:not(:disabled) { background: rgba(255,61,90,0.1); }
+.btnClear:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btnDanger {
+  background: #ff3d5a;
+  border: none;
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 6px 14px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btnDanger:hover { background: #e0334e; }
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 24px 28px;
+  min-width: 320px;
+  max-width: 440px;
+}
+
+.modalTitle {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #ff3d5a;
+  margin: 0 0 12px;
+}
+
+.modalText {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text2);
+  margin: 0 0 20px;
+  line-height: 1.5;
+}
+
+.modalActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
 /* ── Body ───────────────────────────────────────────────────────────────────── */
 .body {
   flex: 1;

@@ -51,6 +51,8 @@ public class ProjetoService {
             "reservorio", "bomba_distribucion"
     );
 
+    private static final String LAYOUT_VAZIO = "{\"componentes\":[],\"tuberias\":[]}";
+
     private final ProjetoRepository projetoRepository;
     private final UsuarioRepository usuarioRepository;
     private final LeituraRepository leituraRepository;
@@ -90,6 +92,7 @@ public class ProjetoService {
                 .ubicacion(dto.getUbicacion())
                 .descripcion(dto.getDescripcion())
                 .usuario(usuario)
+                .layout(LAYOUT_VAZIO)
                 .build();
         Projeto saved = projetoRepository.save(projeto);
 
@@ -310,8 +313,41 @@ public class ProjetoService {
         Projeto projeto = findOwnedProject(id, email);
         projeto.setLayout(layoutJson);
         projetoRepository.save(projeto);
-        auditoriaService.registrar(id, email, "EDITAR_LAYOUT",
-                "Projeto:" + id, null, null, null);
+        // Acción diferenciada: limpiar canvas vs editar
+        String accion = isLayoutVazio(layoutJson) ? "LAYOUT_LIMPO" : "EDITAR_LAYOUT";
+        auditoriaService.registrar(id, email, accion, "Projeto:" + id, null, null, null);
+    }
+
+    private boolean isLayoutVazio(String layoutJson) {
+        try {
+            var node = objectMapper.readTree(layoutJson);
+            var comps = node.get("componentes");
+            return comps != null && comps.isArray() && comps.size() == 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // Usado por ComponentesInternController — devuelve los componenteIds del layout del proyecto
+    public List<String> getComponentesFromLayout(Long id) {
+        Projeto projeto = projetoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Proyecto no encontrado: " + id));
+        String layout = projeto.getLayout();
+        if (layout == null || layout.isBlank()) return List.of();
+        try {
+            var node = objectMapper.readTree(layout);
+            var comps = node.get("componentes");
+            if (comps == null || !comps.isArray()) return List.of();
+            List<String> ids = new java.util.ArrayList<>();
+            comps.forEach(c -> {
+                var cid = c.get("componenteId");
+                if (cid != null && !cid.isNull()) ids.add(cid.asText());
+            });
+            return ids;
+        } catch (Exception e) {
+            log.warn("Error al parsear layout del proyecto {}", id, e);
+            return List.of();
+        }
     }
 
     // -------------------------------------------------------------------------

@@ -8,6 +8,7 @@ import api from '../../services/api';
 import { PALETA_MAP, getPaletaGrupos } from './paletaItems.jsx';
 import { getShapeDef, getShapeSize, renderShape } from './equipShapes.jsx';
 import { useLanguage } from '../../context/LanguageContext.jsx';
+import { useRole } from '../../hooks/useRole.js';
 import s from './CanvasEditor.module.css';
 
 // ── Constantes ────────────────────────────────────────────────────────────────
@@ -160,6 +161,10 @@ export default function CanvasEditor({
 }) {
   const { t } = useLanguage();
   const paletaGrupos = getPaletaGrupos(t);
+  const { isAdmin, isOperador } = useRole(projectId);
+  const canClear = isAdmin || isOperador;
+
+  const [showClearModal, setShowClearModal] = useState(false);
 
   // ── Estado del canvas ────────────────────────────────────────────────────────
   const [instances, setInstances] = useState(() => {
@@ -524,6 +529,23 @@ export default function CanvasEditor({
     setInstances(prev => prev.map(i => i.id === instId ? { ...i, label: newLabel } : i));
   }
 
+  // ── Limpar sinóptico ────────────────────────────────────────────────────────
+  async function handleClearLayout() {
+    setShowClearModal(false);
+    setSaving(true);
+    try {
+      const empty = { componentes: [], tuberias: [], zoom: 1, panX: 0, panY: 0 };
+      await api.post(`/api/proyectos/${projectId}/layout`, empty);
+      setInstances([]);
+      setConnections([]);
+      setZoom(1);
+      setPan({ x: 0, y: 0 });
+      onSave(empty);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   // ── Guardar ─────────────────────────────────────────────────────────────────
   async function handleSave() {
     setSaving(true);
@@ -817,6 +839,11 @@ export default function CanvasEditor({
           >
             {printMode ? t('editor_cancel_print') : t('editor_print')}
           </button>
+          {canClear && (
+            <button className={s.btnClear} onClick={() => setShowClearModal(true)} disabled={saving}>
+              {t('clear_layout_btn')}
+            </button>
+          )}
           <button className={s.btnCancel} onClick={onCancel}>{t('cancel')}</button>
           <button className={s.btnSave} onClick={handleSave} disabled={saving}>
             {saving ? t('editor_saving') : t('editor_save')}
@@ -946,6 +973,20 @@ export default function CanvasEditor({
           )}
         </div>
       </div>
+
+      {/* Modal de confirmación — limpiar sinóptico */}
+      {showClearModal && (
+        <div className={s.modalOverlay}>
+          <div className={s.modal}>
+            <p className={s.modalTitle}>{t('clear_layout_btn')}</p>
+            <p className={s.modalText}>{t('clear_layout_confirm')}</p>
+            <div className={s.modalActions}>
+              <button className={s.btnCancel} onClick={() => setShowClearModal(false)}>{t('cancel')}</button>
+              <button className={s.btnDanger} onClick={handleClearLayout}>{t('clear_layout_btn')}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

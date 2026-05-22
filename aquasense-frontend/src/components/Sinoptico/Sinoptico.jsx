@@ -77,110 +77,6 @@ function parseLayout(raw) {
   }
 }
 
-// ── Sinóptico estático (fallback cuando no hay layout guardado) ──────────────
-// Posiciones calculadas para acomodar los bounding boxes ISA reales de cada shape.
-const STATIC_LAYOUT = [
-  { id: 'bomba_captacao',    labelKey: 'synoptic_label_bomba_captacao',    x: 20,  y: 86 },
-  { id: 'reja_tamiz',        labelKey: 'synoptic_label_reja_tamiz',        x: 140, y: 78 },
-  { id: 'coagulacion',       labelKey: 'synoptic_label_coagulacion',       x: 258, y: 80 },
-  { id: 'decantador',        labelKey: 'synoptic_label_decantador',        x: 400, y: 80 },
-  { id: 'filtracion',        labelKey: 'synoptic_label_filtracion',        x: 560, y: 62 },
-  { id: 'desinfeccion',      labelKey: 'synoptic_label_desinfeccion',      x: 668, y: 94 },
-  { id: 'reservorio',        labelKey: 'synoptic_label_reservorio',        x: 818, y: 50 },
-  { id: 'bomba_distribucion',labelKey: 'synoptic_label_bomba_distribucion',x: 968, y: 86 },
-];
-
-// Flujo principal — puertos anatómicos según conexiones-equipos.md
-const STATIC_CONEXOES = [
-  { from: 'bomba_captacao',    fp: 'descarga',   to: 'reja_tamiz',        tp: 'alimentacao', tipo: 'aguaCruda'   },
-  { from: 'reja_tamiz',        fp: 'salida',     to: 'coagulacion',       tp: 'entrada',     tipo: 'aguaCruda'   },
-  { from: 'coagulacion',       fp: 'salida',     to: 'decantador',        tp: 'entrada',     tipo: 'aguaCruda'   },
-  { from: 'decantador',        fp: 'salida',     to: 'filtracion',        tp: 'entrada',     tipo: 'aguaTratada' },
-  { from: 'filtracion',        fp: 'salida',     to: 'desinfeccion',      tp: 'entrada',     tipo: 'aguaTratada' },
-  { from: 'desinfeccion',      fp: 'salida',     to: 'reservorio',        tp: 'entrada',     tipo: 'aguaTratada' },
-  { from: 'reservorio',        fp: 'salida',     to: 'bomba_distribucion', tp: 'succion',    tipo: 'aguaTratada' },
-];
-
-const StaticSinoptico = memo(function StaticSinoptico({ estado, alertas, modosLocais = {}, onComponenteClick, t }) {
-  const posMap = Object.fromEntries(STATIC_LAYOUT.map(c => [c.id, c]));
-
-  function getAbsPort(id, portId) {
-    const pos = posMap[id];
-    const shape = getShapeDef(id);
-    if (!pos || !shape) return { x: 0, y: 0 };
-    const port = shape.ports.find(p => p.id === portId);
-    return port ? { x: pos.x + port.x, y: pos.y + port.y } : { x: pos.x, y: pos.y };
-  }
-
-  function getPrimary(id) {
-    const cfg = PRIMARY[id];
-    if (!cfg) return null;
-    const comp = estado?.componentes?.[id];
-    if (!comp) return null;
-    const val = comp.valores?.[cfg.key];
-    if (val == null) return null;
-    return `${val.toFixed(1)} ${cfg.unit}`;
-  }
-
-  return (
-    <svg viewBox="0 0 1100 260" className={s.svg} preserveAspectRatio="xMidYMid meet">
-      <defs>
-        {PIPE_TYPE_KEYS.map(pt => (
-          <marker key={pt} id={`sArr_${pt}`} markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-            <path d="M0,0 L6,3 L0,6 Z" fill={PIPE_TYPES[pt].color} opacity="0.8" />
-          </marker>
-        ))}
-      </defs>
-
-      {/* Tuberías con curvas bézier entre puertos anatómicos */}
-      {STATIC_CONEXOES.map((cx, i) => {
-        const p1 = getAbsPort(cx.from, cx.fp);
-        const p2 = getAbsPort(cx.to, cx.tp);
-        const mx = (p1.x + p2.x) / 2;
-        const d = `M ${p1.x} ${p1.y} C ${mx} ${p1.y}, ${mx} ${p2.y}, ${p2.x} ${p2.y}`;
-        const cfg = PIPE_TYPES[cx.tipo];
-        const dash = cfg.dasharray === 'none' ? undefined : cfg.dasharray;
-        return (
-          <g key={i} pointerEvents="none">
-            <path d={d} fill="none" stroke={cfg.color} strokeWidth={cfg.width + 3} opacity="0.10" />
-            <path d={d} fill="none" stroke={cfg.color} strokeWidth={cfg.width}
-              strokeDasharray={dash} markerEnd={`url(#sArr_${cx.tipo})`} opacity="0.75" />
-          </g>
-        );
-      })}
-
-      {/* Equipos — ISA shapes, sin rect de fondo */}
-      {STATIC_LAYOUT.map(({ id, labelKey, x, y }) => {
-        const alertState = getAlertState(id, alertas);
-        const isManual = modosLocais[id] === 'MANUAL';
-        const stroke = isManual ? '#f5a623' : (STATE_STROKE[alertState] ?? '#00e87a');
-        const { width: shW, height: shH } = getShapeSize(id);
-        const primary = getPrimary(id);
-        return (
-          <g key={id} transform={`translate(${x},${y})`}
-            onClick={() => onComponenteClick?.(id)}
-            style={{ cursor: 'pointer' }}>
-            {renderShape(id, stroke, 1.8)}
-            <text x={shW / 2} y={shH + 14} textAnchor="middle" className={s.compLabel} fill={stroke}>
-              {t(labelKey)}
-            </text>
-            {primary && (
-              <text x={shW / 2} y={shH + 26} textAnchor="middle" className={s.compValue} fill={stroke}>
-                {primary}
-              </text>
-            )}
-            {isManual && (
-              <text x={shW / 2} y={shH + 38} textAnchor="middle"
-                style={{ fontSize: '11px', fontFamily: 'monospace', fill: '#f5a623', fontWeight: 700, letterSpacing: '1px' }}>
-                {t('manual_badge')}
-              </text>
-            )}
-          </g>
-        );
-      })}
-    </svg>
-  );
-});
 
 // ── View sinóptico com layout do novo editor ──────────────────────────────────
 const VIEW_W = 80;   // fallback para não-canónicos
@@ -502,16 +398,11 @@ export default function Sinoptico({ projectId, estado, alertas = [], simulacaoAt
 
       <div className={s.editorBody}>
         <div className={s.canvas}>
-          {/* Fallback VIEW: sinóptico estático si no hay layout */}
+          {/* Canvas vacío: instrucción para construir el sinóptico */}
           {!hasLayout && (
-            <div className={s.staticWrap}>
-              <StaticSinoptico
-                estado={estado}
-                alertas={alertas}
-                modosLocais={modosLocais}
-                onComponenteClick={setModoPanelComp}
-                t={t}
-              />
+            <div className={s.emptyState}>
+              <p className={s.emptyStateTitle}>{t('synoptic_empty_title')}</p>
+              <p className={s.emptyStateHint}>{t('synoptic_empty_hint')}</p>
             </div>
           )}
 
